@@ -1,0 +1,8 @@
+name = "NetworkInterfaces"
+uuid = "6f74fd91-2978-43ad-8164-3af8c0ec0142"
+authors = ["Johannes Blaschke <johannes@blaschke.science>"]
+version = "0.1.0"
+
+[deps]
+CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"

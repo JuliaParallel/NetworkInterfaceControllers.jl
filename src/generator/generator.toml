@@ -1,0 +1,6 @@
+[general]
+library_name = "libuv"
+output_file_path = "libuv.jl"
+module_name = "LibUV"
+jll_pkg_name = "LibUV_jll"
+export_symbol_prefixes = ["uv_"]
