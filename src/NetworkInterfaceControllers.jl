@@ -1,4 +1,4 @@
-module NetworkInterfaces
+module NetworkInterfaceControllers
 using Base: unsafe_convert, RefValue
 using Sockets
 
