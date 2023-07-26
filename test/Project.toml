@@ -1,4 +1,4 @@
-name = "NetworkInterfaceControllers"
+name = "NIC Test"
 uuid = "6f74fd91-2978-43ad-8164-3af8c0ec0142"
 authors = ["Johannes Blaschke <johannes@blaschke.science>"]
 version = "0.1.0"
