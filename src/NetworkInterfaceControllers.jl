@@ -69,6 +69,25 @@ struct Interface
     ip::IPAddr
 end
 
+"""
+    get_interface_data([IPAddr]; loopback=false)
+
+Return IP addresses, versions, and interface names of all connected interfaces.
+
+# Examples
+```julia-repl
+julia> get_interface_data()
+2-element Vector{NetworkInterfaceControllers.Interface}:
+ NetworkInterfaceControllers.Interface("wlo1", :v4, ip"192.168.178.21")
+ NetworkInterfaceControllers.Interface("wlo1", :v6, ip"2001:9e8:687b:8b00:b9e2:345e:cfed:a673")
+
+julia> import Sockets: IPv4
+
+julia> get_interface_data(IPv4)
+1-element Vector{NetworkInterfaceControllers.Interface}:
+ NetworkInterfaceControllers.Interface("wlo1", :v4, ip"192.168.178.21")
+```
+"""
 function get_interface_data(
     ::Type{T}=IPAddr; loopback::Bool=false
 ) where T <: IPAddr
