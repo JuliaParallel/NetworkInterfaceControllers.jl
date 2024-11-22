@@ -14,8 +14,6 @@ module LibUVExtensions
 ##
 
 
-using CEnum
-
 const sa_family_t = Cushort
 
 const in_port_t = UInt16
