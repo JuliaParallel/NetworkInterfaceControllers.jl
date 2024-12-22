@@ -12,8 +12,8 @@ args = get_default_args()
 push!(args, "-I$include_dir")
 
 headers = [
-    joinpath(include_dir, header) for header in readdir(include_dir)
-				  if endswith(header, ".h")
+    joinpath(include_dir, header)
+    for header in readdir(include_dir) if endswith(header, ".h")
 ]
 # # there is also an experimental `detect_headers` function for auto-detecting
 # # top-level headers in the directory -- TODO: use this when no-logner

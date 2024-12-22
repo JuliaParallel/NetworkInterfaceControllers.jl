@@ -1,4 +1,6 @@
 module NetworkInterfaceControllers
+
+
 using Base: unsafe_convert, RefValue
 using Sockets
 
@@ -117,5 +119,8 @@ function get_interface_data(
 end
 
 export get_interface_data
+
+include("broker.jl")
+import .Broker
 
 end # module NetworkInterfaces
