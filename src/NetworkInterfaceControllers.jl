@@ -123,4 +123,7 @@ export get_interface_data
 include("broker.jl")
 import .Broker
 
+include("nic_preferences.jl")
+import .NICPreferences
+
 end # module NetworkInterfaces
