@@ -22,11 +22,13 @@ if selection_stragety_str == "name_match"
     @assert !isnothing(preferred_interface_name)
 elseif selection_stragety_str == "name_prefix"
     const selection_stragety = PREFERRED_INTERFACE_NAME_PREFIX
-    @assert !isnothing()
+    @assert !isnothing(preferred_interface_name_prefix)
 elseif selection_stragety_str == "name_suffix"
     const selection_stragety = PRERERRED_INTERFACE_NAME_SUFFIX
+    @assert !isnothing(preferred_interface_name_suffix)
 elseif selection_stragety_str == "name_regex"
     const selection_stragety = PREFERRED_INTERFACE_NAME_REGEX
+    @assert !isnothing(preferred_interface_name_regex)
 elseif selection_stragety_str == "hwloc_closest"
     const selection_stragety = PREFERRED_INTERFACE_HWLOC_CLOSEST
 elseif selection_stragety_str == "broker"
