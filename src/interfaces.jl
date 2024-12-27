@@ -2,6 +2,7 @@ module Interfaces
 using Base: unsafe_convert, RefValue
 using Sockets
 
+
 include("libuv_extensions.jl")
 using .LibUVExtensions:
     uv_interface_address_t, uv_interface_addresses, uv_free_interface_addresses
@@ -82,10 +83,12 @@ function get_interface_data(
     interface_data = Interface[]
     current_addr = addr_ref
     for i = 0:(count_ref[]-1)
+        @debug "Scanning interface $(i)"
         # Skip loopback devices, if so required
         if (!loopback) && _is_loopback(current_addr[])
             # Don't don't forget to iterate the address pointer though!
             current_addr = _next(current_addr)
+            @debug "Interface $(i) is a loopback device => skipping"
             continue
         end
 
@@ -103,6 +106,8 @@ function get_interface_data(
         else
             (:skip, nothing)
         end
+
+        @debug "Interface $(i) is called '$(name)' at IP: $(ip_address)"
 
         # Append to data vector and itnerate address pointer
         if ip_type != :skip
