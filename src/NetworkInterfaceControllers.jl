@@ -26,11 +26,11 @@ function best_interface_broker(
     ) where T <: Integer
 end
 
-function best_interface(data::Interface)
+function best_interfaces(data::Interface)
     strategy = NICPreferences.selection_strategy
 
     if strategy == NICPreferences.PREFERRED_INTERFACE_NAME_MATCH
-        return NameSelector.best_interface(data)
+        return NameSelector.best_interfaces(data)
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_HWLOC_CLOSEST
         return best_interface_hwloc_closest(data)
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_BROKER
