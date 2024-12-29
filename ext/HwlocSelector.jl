@@ -15,7 +15,7 @@ function get_cpu_id(pid=getpid())
     cpu_id = Hwloc.LibHwloc.hwloc_bitmap_first(bm)
 
     Hwloc.LibHwloc.hwloc_bitmap_free(bm)
-    Hwloc.LibHwloc.hwloc_topology_destroy(htopo)
+    Hwloc.LibHwloc.hwloc_topology_destroy(topo)
 
     return cpu_id
 end

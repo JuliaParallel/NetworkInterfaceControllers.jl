@@ -15,6 +15,9 @@ using .NICPreferences
 include("name_selector.jl")
 using .NameSelector
 
+# Load HwlocSelector module via and extension => avoid adding dependencies on
+# Hwloc and AbstractTrees unless needed
+get_hwloc_selector() = Base.get_extension(@__MODULE__, :HwlocSelector)
 
 function best_interface_hwloc_closest(
         data::Interface; pid::Union{T, Nothing}=nothing
@@ -26,13 +29,17 @@ function best_interface_broker(
     ) where T <: Integer
 end
 
-function best_interfaces(data::Interface)
+function best_interfaces(data::Vector{Interface})
     strategy = NICPreferences.selection_strategy
 
     if strategy == NICPreferences.PREFERRED_INTERFACE_NAME_MATCH
         return NameSelector.best_interfaces(data)
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_HWLOC_CLOSEST
-        return best_interface_hwloc_closest(data)
+        HwlocSelector = get_hwloc_selector()
+        if isnothing(HwlocSelector)
+            @error "Ensure you load the Hwloc and AbstractTrees modules before calling this function"
+        end
+        return HwlocSelector.best_interfaces(data)
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_BROKER
         return best_interface_broker(data)
     else

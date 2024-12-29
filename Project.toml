@@ -8,8 +8,14 @@ CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 Preferences = "21216c6a-2e73-6563-6e65-726566657250"
 Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
+# here for compatibility with older versions of Julia (that don't have extensions):
+# https://pkgdocs.julialang.org/v1/creating-packages/#Transition-from-normal-dependency-to-extension
+Hwloc = "0e44f5e4-bd66-52a0-8798-143a42290a1d"
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 
 [extensions]
+# Conditional dependencies: https://pkgdocs.julialang.org/v1/creating-packages/#Conditional-loading-of-code-in-packages-(Extensions)
+# Note: use a list for multiple extension dependencies
 HwlocSelector = ["Hwloc", "AbstractTrees"]
 
 [compat]
