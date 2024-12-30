@@ -3,33 +3,38 @@ module HwlocSelector
 using Hwloc, AbstractTrees, NetworkInterfaceControllers
 
 struct TraversalHistory{T}
-    visited::IdDict{T, Bool}
+    distance::IdDict{T, Int}
 
     function TraversalHistory(root::T) where T
-        visited = IdDict{T, Bool}()
+        distance = IdDict{T, Int}()
         for c in PreOrderDFS(root)
-            visited[c] = false
+            distance[c] = -1
         end
-        new{T}(visited)
+        new{T}(distance)
     end
 end
 
-Base.getindex(th::TraversalHistory{T}, k::T) where T = th.visited[k]
-Base.setindex!(th::TraversalHistory{T}, v::Bool, k::T) where T = th.visited[k] = v
-Base.keys(th::TraversalHistory{T}) where T = keys(th.visited)
+Base.getindex(th::TraversalHistory{T}, k::T) where T = th.distance[k]
+Base.setindex!(th::TraversalHistory{T}, v::Int, k::T) where T = th.distance[k] = v
+Base.keys(th::TraversalHistory{T}) where T = keys(th.distance)
 
-function visit!(node::T, history::TraversalHistory{T})::Nothing where T
-    history[node] = true
-    return nothing
+function visit!(node::T, dist::Int, history::TraversalHistory{T})::Int where T
+    if !visited(node, history)
+        history[node] = dist
+        return dist
+    end
+
+    history[node] = minimum((history[node], dist))
+    return history[node]
 end
 
 function visited(node::T, history::TraversalHistory{T})::Bool where T
-    return history[node]
+    return history[node] > 0
 end
 
 function reset(history::TraversalHistory{T})::Nothing where T
     for k in keys(history)
-        history[k] = false
+        history[k] = -1
     end
     return nothing
 end
@@ -55,15 +60,16 @@ end
 export get_cpu_id
 
 function distance_to_core!(
-        th::TraversalHistory{T}, node::T, target_index
+        th::TraversalHistory{T}, dist::Int, node::T, target_index
     )::Tuple{Bool, Int} where T
 
-    # shield re-entrance when iterating
-    visit!(node, th)
+    # save current distance when iterating -- if already visited, return the
+    # minimal distance
+    dist = visit!(node, dist, th)
 
     if node.type == :PU
         if nodevalue(node).os_index == target_index
-            return true, 0
+            return true, dist
         end
     end
 
@@ -72,16 +78,16 @@ function distance_to_core!(
             continue
         end
 
-        found, dist = distance_to_core!(th, child, target_index)
+        found, dist = distance_to_core!(th, dist + 1, child, target_index)
         if found
-            return true, dist + 1
+            return true, dist
         end
     end
 
     if !isnothing(node.parent)
-        found, dist = distance_to_core!(th, node.parent, target_index)
+        found, dist = distance_to_core!(th, dist + 1, node.parent, target_index)
         if found
-            return true, dist + 1*(1-Int(visited(node.parent, th))) - 1*Int(visited(node.parent, th))
+            return true, dist
         end
     end
 
@@ -90,7 +96,7 @@ end
 
 function distance_to_core(root::T, node::T, target_index)::Tuple{Bool, Int} where T
     th = TraversalHistory(root)
-    return distance_to_core!(th, node, target_index)
+    return distance_to_core!(th, 0, node, target_index)
 end
 
 export distance_to_core
