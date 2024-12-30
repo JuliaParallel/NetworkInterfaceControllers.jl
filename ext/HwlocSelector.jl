@@ -74,24 +74,18 @@ function distance_to_core!(
     end
 
     for child in node.children
-        if visited(child, th)
-            continue
-        end
+        visited(child, th) && continue
 
         found, dist = distance_to_core!(th, dist + 1, child, target_index)
-        if found
-            return true, dist
-        end
+        found && return true, dist
     end
 
     if !isnothing(node.parent)
         found, dist = distance_to_core!(th, dist + 1, node.parent, target_index)
-        if found
-            return true, dist
-        end
+        found && return true, dist
     end
 
-    return false, typemax(Int)
+    return false, dist 
 end
 
 function distance_to_core(root::T, node::T, target_index)::Tuple{Bool, Int} where T
