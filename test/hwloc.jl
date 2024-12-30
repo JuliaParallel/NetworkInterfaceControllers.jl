@@ -6,6 +6,8 @@ net = HwlocSelector.get_network_devices(topo) |> collect
 cpuid = HwlocSelector.get_cpu_id()
 
 println(cpuid)
+for i=0:7
 println(
-    HwlocSelector.distance_to_core(topo, net[1], cpuid)
+    i, HwlocSelector.distance_to_core(topo, net[1], i)
 )
+end

@@ -62,7 +62,6 @@ function distance_to_core!(
     visit!(node, th)
 
     if node.type == :PU
-        println("Found core: $(nodevalue(node).os_index)")
         if nodevalue(node).os_index == target_index
             return true, 0
         end
@@ -73,7 +72,6 @@ function distance_to_core!(
             continue
         end
 
-        println("Going to Child")
         found, dist = distance_to_core!(th, child, target_index)
         if found
             return true, dist + 1
@@ -81,10 +79,9 @@ function distance_to_core!(
     end
 
     if !isnothing(node.parent)
-        println("Going to parent: $(node.parent.type)")
         found, dist = distance_to_core!(th, node.parent, target_index)
         if found
-            return true, dist - 1
+            return true, dist + 1*(1-Int(visited(node.parent, th))) - 1*Int(visited(node.parent, th))
         end
     end
 
