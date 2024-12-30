@@ -56,13 +56,14 @@ export get_cpu_id
 
 function distance_to_core!(
         th::TraversalHistory{T}, node::T, target_index
-    )::Tuple{Bool, UInt64} where T
+    )::Tuple{Bool, Int} where T
 
     # shield re-entrance when iterating
     visit!(node, th)
 
-    if node.type == :Core
-        if nodevalue(node).logical_index == target_index
+    if node.type == :PU
+        println("Found core: $(nodevalue(node).os_index)")
+        if nodevalue(node).os_index == target_index
             return true, 0
         end
     end
@@ -72,26 +73,27 @@ function distance_to_core!(
             continue
         end
 
+        println("Going to Child")
         found, dist = distance_to_core!(th, child, target_index)
         if found
             return true, dist + 1
         end
-
     end
 
-    if node.parent != nothing
+    if !isnothing(node.parent)
+        println("Going to parent: $(node.parent.type)")
         found, dist = distance_to_core!(th, node.parent, target_index)
         if found
-            return true, dist + 1
+            return true, dist - 1
         end
     end
 
     return false, typemax(Int)
 end
 
-function distance_to_core(root::T, target_index)::Tuple{Bool, UInt64} where T
+function distance_to_core(root::T, node::T, target_index)::Tuple{Bool, Int} where T
     th = TraversalHistory(root)
-    return distance_to_core!(th, root, target_index)
+    return distance_to_core!(th, node, target_index)
 end
 
 export distance_to_core

@@ -37,7 +37,7 @@ function best_interfaces(data::Vector{Interface})
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_HWLOC_CLOSEST
         HwlocSelector = get_hwloc_selector()
         if isnothing(HwlocSelector)
-            @error "Ensure you load the Hwloc and AbstractTrees modules before calling this function"
+            @error "'Hwloc' and/or 'AbstractTrees' not loaded! Run: `import Hwloc, AbstractTrees`"
         end
         return HwlocSelector.best_interfaces(data)
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_BROKER
