@@ -107,6 +107,11 @@ get_network_devices(root) = filter(
     get_nodes(root, :PCI_Device)
 )
 
+function hwloc_nic_name(pci_device)
+    os_device = pci_device |> x->get_nodes(x, :OS_Device) |> only
+    os_device |> nodevalue |> x->getfield(x, :name)
+end
+
 export get_nodes, get_network_devices
 
 end
