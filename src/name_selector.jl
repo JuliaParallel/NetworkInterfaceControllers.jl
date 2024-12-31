@@ -33,7 +33,7 @@ function best_interfaces(
         end
 
         if !check_whitelist(interface)
-            @debug "$(interface) is not on (non-empty )whitelist => skipping"
+            @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
@@ -64,7 +64,7 @@ function best_interfaces(
         end
 
         if !check_whitelist(interface)
-            @debug "$(interface) is not on (non-empty )whitelist => skipping"
+            @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
@@ -95,7 +95,7 @@ function best_interfaces(
         end
 
         if !check_whitelist(interface)
-            @debug "$(interface) is not on (non-empty )whitelist => skipping"
+            @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
@@ -130,7 +130,7 @@ function best_interfaces(
         end
 
         if !check_whitelist(interface)
-            @debug "$(interface) is not on (non-empty )whitelist => skipping"
+            @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
