@@ -3,6 +3,7 @@ module Broker
 using Sockets
 using Serialization
 
+import ..Interfaces
 
 struct TxnPort
     port::UInt32
@@ -28,7 +29,6 @@ struct Database
         )
     end
 end
-
 
 function transaction(db::Database, ifd::InterfaceData)::InterfaceAssignment
     selected_interface::String
@@ -79,7 +79,6 @@ function transaction(db::Database, ifd::InterfaceData)::InterfaceAssignment
     return InterfaceAssignment(selected_interface)
 end
 
-
 function random_free_port(ip::IPv4; start=1000, stop=61000, max_attempts=100)
     for _ in 1:max_attempts
         port::UInt32 = rand(start:stop)
@@ -96,7 +95,6 @@ function random_free_port(ip::IPv4; start=1000, stop=61000, max_attempts=100)
     end
     @error "Could not find a free port after $(max_attempts) attempts."
 end
-
 
 function start_listener(ip::IPAddr, port::UInt32)
     server::Sockets.TCPServer = listen(ip, port)
@@ -115,7 +113,6 @@ function start_listener(ip::IPAddr, port::UInt32)
         end
     end
 end
-
 
 function start_transaction(ip::IPAddr, port::UInt32)
     conn = connect(ip, port)
