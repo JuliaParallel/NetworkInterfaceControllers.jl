@@ -3,7 +3,6 @@ module NameSelector
 import ..Interfaces
 import ..NICPreferences
 
-
 function check_whitelist(data::Interfaces.Interface)
     if isnothing(NICPreferences.interface_name_whitelist)
         return true

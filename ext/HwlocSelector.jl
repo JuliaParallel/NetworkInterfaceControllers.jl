@@ -39,7 +39,7 @@ function reset(history::TraversalHistory{T})::Nothing where T
     return nothing
 end
 
-function get_cpu_id(pid=getpid())
+function get_cpu_id(pid=getpid())::Int
     topo = Hwloc.topology_init() 
     ierr = Hwloc.LibHwloc.hwloc_topology_load(topo)
     @assert ierr == 0
@@ -50,6 +50,7 @@ function get_cpu_id(pid=getpid())
         topo, pid, bm, Hwloc.LibHwloc.HWLOC_CPUBIND_THREAD
     )
     cpu_id = Hwloc.LibHwloc.hwloc_bitmap_first(bm)
+    @debug "Hwloc CPU ID: $(cpu_id)"
 
     Hwloc.LibHwloc.hwloc_bitmap_free(bm)
     Hwloc.LibHwloc.hwloc_topology_destroy(topo)
@@ -113,5 +114,57 @@ function hwloc_nic_name(pci_device)
 end
 
 export get_nodes, get_network_devices
+
+function hwloc_nic_distances(cpuid::Int)::Dict{String, Int}
+    topo = children(gettopology())
+    net  = get_network_devices(topo) |> collect
+
+    distances = Dict{String, Int}()
+    for n in net
+        name = hwloc_nic_name(n)
+        found, dist = distance_to_core(topo, n, cpuid)
+        if found
+            distances[name] = dist
+            @debug "Interface $(name) is $(dist) steps from cpu $(cpuid)"
+        else
+            @warn "Failed to find path connecting interface $(name) with cpu $(cpuid) on Hwloc tree"
+        end
+    end
+
+    return distances
+end
+
+function best_interfaces(
+        data::Vector{NetworkInterfaceControllers.Interface},
+        ::Type{Val{NetworkInterfaceControllers.NICPreferences.MATCH_EXACT}}
+    )
+    @debug "Using MATCH_EXACT to find interfaces"
+    if isnothing(NICPreferences.preferred_interface_name)
+        @warn "'preferred_interface_name' is empty! Matching to everything"
+    end
+
+    matched = Interfaces.Interface[]
+    for interface in data
+        @debug "Checking: $(interface)"
+        if interface in NICPreferences.interface_name_blacklist
+            @debug "$(interface) is blacklisted => skipping"
+            continue
+        end
+
+        if !check_whitelist(interface)
+            @debug "$(interface) is not on (non-empty )whitelist => skipping"
+            continue
+        end
+
+        if interface.name == NICPreferences.preferred_interface_name ||
+        isnothing(NICPreferences.preferred_interface_name)
+            @debug "Found matching interface: $(interface)"
+            push!(matched, interface)
+        end
+    end
+    return matched
+end
+
+export hwloc_nic_distances
 
 end
