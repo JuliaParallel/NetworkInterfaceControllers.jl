@@ -30,7 +30,7 @@ struct Database
 end
 
 
-function transaction(db::Database, ifd::InterfaceData)
+function transaction(db::Database, ifd::InterfaceData)::InterfaceAssignment
     selected_interface::String
     lock(db.lock) do
         # We'll be iterating over these interfaces only -- this way the ifd
@@ -98,22 +98,17 @@ function random_free_port(ip::IPv4; start=1000, stop=61000, max_attempts=100)
 end
 
 
-function start_listener(ip::IPv4, port::UInt32)
-    server::TCPServer = listen(ip, port)
+function start_listener(ip::IPAddr, port::UInt32)
+    server::Sockets.TCPServer = listen(ip, port)
 
     while true
         conn = accept(server)
-        print(typeof(conn))
-
         @async begin
             try
-                while true
-                    txn_port::TxnPort = random_free_port(ip)
-                    line::IOBuffer    = IOBuffer()
-                    serialize(line, txn_port)
-                    seekstart(line)
-                    write(conn, line)
-                end
+                @debug "Processing connection"
+                txn_port::TxnPort = random_free_port(ip)
+                serialize(conn, txn_port)
+                @debug "Using port $(txn_port) for transaction"
             catch err
                 @error "Connection ended with error $(err)."
             end
@@ -122,8 +117,10 @@ function start_listener(ip::IPv4, port::UInt32)
 end
 
 
-function start_transaction(ip::IPv4, port::UInt32)
-
+function start_transaction(ip::IPAddr, port::UInt32)
+    conn = connect(ip, port)
+    txn_port::TxnPort = deserialize(conn)
+    txn_port
 end
 
 
