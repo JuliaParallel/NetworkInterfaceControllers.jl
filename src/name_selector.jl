@@ -3,42 +3,34 @@ module NameSelector
 import ..Interfaces
 import ..NICPreferences
 
-function check_whitelist(data::Interfaces.Interface)
-    if isnothing(NICPreferences.interface_name_whitelist)
-        return true
-    end
-
-    if length(NICPreferences.interface_name_whitelist) == 0
-        return true
-    end
-
-    data in NICPreferences.interface_name_whitelist
-end
-
 function best_interfaces(
         data::Vector{Interfaces.Interface},
         ::Type{Val{NICPreferences.MATCH_EXACT}}
     )
     @debug "Using MATCH_EXACT to find interfaces"
-    if isnothing(NICPreferences.preferred_interface_name)
+    if isnothing(NICPreferences.PREFERRED_INTERFACE.name)
         @warn "'preferred_interface_name' is empty! Matching to everything"
     end
 
     matched = Interfaces.Interface[]
     for interface in data
         @debug "Checking: $(interface)"
-        if interface in NICPreferences.interface_name_blacklist
+        if NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_BLACKLIST, false
+            )
             @debug "$(interface) is blacklisted => skipping"
             continue
         end
 
-        if !check_whitelist(interface)
+        if ! NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_WHITELIST, true
+            )
             @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
-        if interface.name == NICPreferences.preferred_interface_name ||
-        isnothing(NICPreferences.preferred_interface_name)
+        if interface.name == NICPreferences.PREFERRED_INTERFACE.name ||
+        isnothing(NICPreferences.PREFERRED_INTERFACE.name)
             @debug "Found matching interface: $(interface)"
             push!(matched, interface)
         end
@@ -51,25 +43,29 @@ function best_interfaces(
         ::Type{Val{NICPreferences.MATCH_PREFIX}}
     )
     @debug "Using MATCH_PREFIX to find interfaces"
-    if isnothing(NICPreferences.preferred_interface_name)
+    if isnothing(NICPreferences.PREFERRED_INTERFACE.name)
         @warn "'preferred_interface_name' is empty! Matching to everything"
     end
 
     matched = Interfaces.Interface[]
     for interface in data
         @debug "Checking: $(interface)"
-        if interface in NICPreferences.interface_name_blacklist
+        if NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_BLACKLIST, false
+            )
             @debug "$(interface) is blacklisted => skipping"
             continue
         end
 
-        if !check_whitelist(interface)
+        if ! NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_WHITELIST, true
+            )
             @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
-        if startswith(interface.name, NICPreferences.preferred_interface_name) ||
-        isnothing(NICPreferences.preferred_interface_name)
+        if startswith(interface.name, NICPreferences.PREFERRED_INTERFACE.name) ||
+        isnothing(NICPreferences.PREFERRED_INTERFACE.name)
             @debug "Found matching interface: $(interface)"
             push!(matched, interface)
         end
@@ -82,25 +78,29 @@ function best_interfaces(
         ::Type{Val{NICPreferences.MATCH_SUFFIX}}
     )
     @debug "Using MATCH_SUFFIX to find interfaces"
-    if isnothing(NICPreferences.preferred_interface_name)
+    if isnothing(NICPreferences.PREFERRED_INTERFACE.name)
         @warn "'preferred_interface_name' is empty! Matching to everything"
     end
 
     matched = Interfaces.Interface[]
     for interface in data
         @debug "Checking: $(interface)"
-        if interface in NICPreferences.interface_name_blacklist
+        if NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_BLACKLIST, false
+            )
             @debug "$(interface) is blacklisted => skipping"
             continue
         end
 
-        if !check_whitelist(interface)
+        if ! NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_WHITELIST, true
+            )
             @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
-        if endswith(interface.name, NICPreferences.preferred_interface_name) ||
-        isnothing(NICPreferences.preferred_interface_name)
+        if endswith(interface.name, NICPreferences.PREFERRED_INTERFACE.name) ||
+        isnothing(NICPreferences.PREFERRED_INTERFACE.name)
             @debug "Found matching interface: $(interface)"
             push!(matched, interface)
         end
@@ -114,27 +114,31 @@ function best_interfaces(
     )
     @debug "Using MATCH_REGEX to find interfaces"
 
-    if isnothing(NICPreferences.preferred_interface_name)
+    if isnothing(NICPreferences.PREFERRED_INTERFACE.name)
         @warn "'preferred_interface_name' is empty! Matching to everything"
         name_regex = Regex(".*")
     else
-        name_regex = Regex(NICPreferences.preferred_interface_name)
+        name_regex = Regex(NICPreferences.PREFERRED_INTERFACE.name)
     end
 
     matched = Interfaces.Interface[]
     for interface in data
         @debug "Checking: $(interface)"
-        if interface in NICPreferences.interface_name_blacklist
+        if NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_BLACKLIST, false
+            )
             @debug "$(interface) is blacklisted => skipping"
             continue
         end
 
-        if !check_whitelist(interface)
+        if ! NICPreferences.in_list(
+                interface.name, NICPreferences.INTERFACE_NAME_WHITELIST, true
+            )
             @debug "$(interface) is not on (non-empty) whitelist => skipping"
             continue
         end
 
-        if !isnothing(match(name_regex, interface.name))
+        if ! isnothing(match(name_regex, interface.name))
             @debug "Found matching interface: $(interface)"
             push!(matched, interface)
         end
@@ -148,6 +152,6 @@ best_interfaces(
 
 best_interfaces(
     data::Vector{Interfaces.Interface}
-) = best_interfaces(data, NICPreferences.match_strategy)
+) = best_interfaces(data, NICPreferences.PREFERRED_INTERFACE.match_strategy)
 
 end

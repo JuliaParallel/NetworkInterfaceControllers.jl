@@ -19,6 +19,11 @@ using .NameSelector
 # Hwloc and AbstractTrees unless needed
 get_hwloc_selector() = Base.get_extension(@__MODULE__, :HwlocSelector)
 
+include("hostlists.jl")
+# Defindes a Hostlists module which is aliased to either SlurmHostlists or
+# SimpleHostlists
+
+
 function best_interface_hwloc_closest(
         data::Interface; pid::Union{T, Nothing}=nothing
     ) where T <: Integer
