@@ -25,7 +25,7 @@ HwlocSelector = ["Hwloc", "AbstractTrees"]
 AbstractTrees = ">=0.4"
 CEnum = ">=0.4"
 Hwloc = ">=3.3"
-Libdl = "1.11.0"
+Libdl = ">=1.7"
 Serialization = ">=1.7"
 julia = ">=1.7"
 
