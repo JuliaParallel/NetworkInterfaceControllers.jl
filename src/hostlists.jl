@@ -1,3 +1,4 @@
+module Hostlists
 module SlurmHostlists
 
 import Libdl
@@ -68,12 +69,15 @@ function Base.convert(::Type{String}, hl::Hostlist, init_maxlen=8192)
 end
 
 Base.string(hl::Hostlist) = Base.convert(String, hl)
-Base.push!(x::Hostlist, y::String) = slurm_hostlist_push(x.hlist, y)
+function Base.push!(x::Hostlist, y::String)
+    slurm_hostlist_push(x.hlist, y)
+    x
+end
 Base.length(x::Hostlist) = slurm_hostlist_count(x.hlist)
 
 export string, push!, length
 
-Base.show(io::IO, x::Hostlist) = println(io, string(x))
+Base.show(io::IO, x::Hostlist) = print(io, string(x))
 
 end
 
@@ -83,7 +87,7 @@ mutable struct Hostlist
     hlist::Vector{String}
     
     function Hostlist(node_list::String)
-        hl = node_list |> x->split(x, ",")
+        hl = node_list |> x->split(x, ",") |> x->filter(!isempty, x) |> unique!
         return new(hl)
     end
 end
@@ -92,24 +96,31 @@ Base.eltype(::Hostlist) = String
 Base.IteratorEltype(::Type{Hostlist}) = Base.HasEltype()
 Base.IteratorSize(::Type{Hostlist}) = Base.SizeUnknown()
 
+Base.iterate(hl::Hostlist) = Base.iterate(hl.hlist)
 Base.iterate(hl::Hostlist, state) = Base.iterate(hl.hlist, state) 
 
 Base.convert(::Type{String}, hl::Hostlist) = join(hl.hlist, ",")
 Base.string(hl::Hostlist) = Base.convert(String, hl)
-Base.push!(x::Hostlist, y::String) = push!(x.hlist, y)
+function Base.push!(x::Hostlist, y::String)
+    push!(x.hlist, y)
+    x.hlist = x.hlist |> x->filter(!isempty, x) |> unique!
+    x
+end
 Base.length(x::Hostlist) = length(x.hlist)
 
 export string, push!, length
 
-Base.show(io::IO, x::Hostlist) = println(io, string(x))
+Base.show(io::IO, x::Hostlist) = print(io, string(x))
 
 end
 
-if "" == SlurmHostlists.libslurm
-    @debug "libslurm.so not found, using SimpleHostlists"
-    const Hostlists = SimpleHostlists
-else
-    @debug "libslurm.so found, using SlurmHostlists"
-    const Hostlists = SlurmHostlists
+function __init__()
+    if "" == SlurmHostlists.libslurm
+        @debug "libslurm.so not found, using SimpleHostlists"
+        global const Hostlists.Hostlist = SimpleHostlists.Hostlist
+    else
+        @debug "libslurm.so found, using SlurmHostlists"
+        global const Hostlists.Hostlist = SlurmHostlists.Hostlist
+    end
 end
-
+end
