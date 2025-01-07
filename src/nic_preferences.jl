@@ -2,12 +2,6 @@ module NICPreferences
 
 using Preferences
 
-@enum SELECTION_STRATEGY begin
-    PREFERRED_INTERFACE_NAME_MATCH=1
-    PREFERRED_INTERFACE_HWLOC_CLOSEST=2
-    PREFERRED_INTERFACE_BROKER=3
-end
-
 @enum MATCH_STRATEGY begin
     MATCH_EXACT=1
     MATCH_PREFIX=2
@@ -28,6 +22,63 @@ const allowed_match_strategy_str = ("exact", "prefix", "suffix", "regex")
 
 check_mode(mode) = issubset(Set(keys(mode)), Set(allowed_mode_keys))
 check_interface(iface) = issubset(Set(keys(iface)), Set(allowed_iface_keys))
+
+function mode_dict(
+        when::USE_STRATEGY, hostname::Union{String, Nothing}=nothing
+    )::Dict{String, Any}
+
+    md = Dict{String, Any}()
+
+    if when == USE_ALWAYS
+        md["when"] = "always"
+    elseif when == USE_HOSTNAME
+        md["when"] = "hostname"
+    elseif when == USE_DISABLED
+        md["when"] = "never"
+    else
+        @error "$(when) is unhandled"
+    end
+
+    !isnothing(hostname) && (md["hostname"] = hostname)
+
+    if !check_mode(md)
+        @error "$(md) is not a valid mode dict"
+    end
+
+    return md
+end
+
+function iface_dict(
+        name::Union{String, Nothing}, match_strategy::MATCH_STRATEGY,
+        port::Union{Int, Nothing}=nothing
+    )::Dict{String, Any}
+
+    ifd = Dict{String, Any}()
+
+    ifd["name"] = name
+
+    if match_strategy == MATCH_EXACT
+        ifd["match_strategy"] = "exact"
+    elseif match_strategy == MATCH_PREFIX
+        ifd["match_strategy"] = "prefix"
+    elseif match_strategy == MATCH_SUFFIX
+        ifd["match_strategy"] = "suffix"
+    elseif match_strategy == MATCH_REGEX
+        ifd["match_strategy"] = "regex"
+    else
+        @error "$(match_strategy) is unhandled"
+    end
+
+    !isnothing(port) && (ifd["port"] = port)
+
+    if !check_interface(ifd)
+        @error "$(ifd) is not a valid interface dict"
+    end
+
+    return ifd
+end
+
+export mode_dict, iface_dict
 
 mutable struct ModeSettings
     when::USE_STRATEGY
@@ -64,7 +115,6 @@ mutable struct InterfaceSettings
 
     function InterfaceSettings(iface_dict)::InterfaceSettings
         @assert check_interface(iface_dict)
-        @assert "name" in keys(iface_dict)
         @assert iface_dict["match_strategy"] in allowed_match_strategy_str
 
         if "exact" == iface_dict["match_strategy"]
@@ -82,38 +132,35 @@ mutable struct InterfaceSettings
 
         port = ("port" in keys(iface_dict)) ? iface_dict["port"] : nothing
 
-        return new(iface_dict["name"], match_strategy, port)
+        return new(get(iface_dict, "name", nothing), match_strategy, port)
     end
 end
 
-d_mode_always = Dict{String, Any}("when"=>"always")
-d_mode_never = Dict{String, Any}("when"=>"never")
-d_iface = Dict{String, Any}("name"=>nothing, "match_strategy"=>"exact")
-d_iface_broker = Dict{String, Any}("name"=>nothing, "match_strategy"=>"exact", "port"=>1000)
-d_class = "Ethernet"
+const _d_class = "Ethernet"
 
-const name_selector_mode = @load_preference("name_selector_mode", deepcopy(d_mode_always))
-const preferred_interface = @load_preference("preferred_interface", deepcopy(d_iface))
+const _name_selector_mode = @load_preference("name_selector_mode", mode_dict(USE_ALWAYS))
+const _preferred_interface = @load_preference("preferred_interface", iface_dict(nothing, MATCH_EXACT))
 
 const INTERFACE_NAME_BLACKLIST = @load_preference("interface_name_blacklist")
 const INTERFACE_NAME_WHITELIST = @load_preference("interface_name_whitelist")
 
-const hwloc_selector_mode = @load_preference("hwloc_selector_mode", deepcopy(d_mode_never))
-const hwloc_nic_pci_class = @load_preference("hwloc_nic_pci_class", deepcopy(d_class))
+const _hwloc_selector_mode = @load_preference("hwloc_selector_mode", mode_dict(USE_DISABLED))
+const HWLOC_NIC_PCI_CLASS = @load_preference("hwloc_nic_pci_class", _d_class)
 
-const broker_mode = @load_preference("broker_mode", deepcopy(d_mode_never))
-const broker_interface = @load_preference("broker_interface_name", deepcopy(d_iface_broker))
+const _broker_mode = @load_preference("broker_mode", mode_dict(USE_DISABLED))
+const _broker_interface = @load_preference("broker_interface", iface_dict(nothing, MATCH_EXACT, 1000))
 
-const NAME_SELECTOR = ModeSettings(name_selector_mode)
-const HWLOC_SELECTOR = ModeSettings(hwloc_selector_mode)
-const BROKER = ModeSettings(broker_mode)
+const NAME_SELECTOR = ModeSettings(_name_selector_mode)
+const HWLOC_SELECTOR = ModeSettings(_hwloc_selector_mode)
+const BROKER = ModeSettings(_broker_mode)
 
-const PREFERRED_INTERFACE = InterfaceSettings(preferred_interface)
-const BROKER_INTERFACE = InterfaceSettings(broker_interface)
+const PREFERRED_INTERFACE = InterfaceSettings(_preferred_interface)
+const BROKER_INTERFACE = InterfaceSettings(_broker_interface)
 
 export NAME_SELECTOR, HWLOC_SELECTOR, BROKER
 export INTERFACE_NAME_BLACKLIST, INTERFACE_NAME_WHITELIST
 export PREFERRED_INTERFACE, BROKER_INTERFACE
+export HWLOC_NIC_PCI_CLASS
 
 function in_list(elt::T, v::Union{Nothing, Vector{T}}, d::Bool)::Bool where T
     isnothing(v) && return d
@@ -122,15 +169,15 @@ end
 
 return in_list
 
-function configure(;
-        name_selector_mode=d_mode_always,
-        preferred_interface=d_iface,
+function configure!(;
+        name_selector_mode=mode_dict(USE_ALWAYS),
+        preferred_interface=iface_dict(nothing, MATCH_EXACT),
         interface_name_whitelist::Union{Vector{String}, Nothing}=nothing,
         interface_name_blacklist::Union{Vector{String}, Nothing}=nothing,
-        hwloc_selector_mode=d_mode_never,
-        hwloc_nic_pci_class::Union{String, Nothing}=d_class,
-        broker_mode=d_mode_never,
-        broker_interface=d_iface_broker
+        hwloc_selector_mode=mode_dict(USE_DISABLED),
+        hwloc_nic_pci_class::Union{String, Nothing}=_d_class,
+        broker_mode=mode_dict(USE_DISABLED),
+        broker_interface=iface_dict(nothing, MATCH_EXACT, 1000)
     )
 
     @assert check_mode(name_selector_mode)
