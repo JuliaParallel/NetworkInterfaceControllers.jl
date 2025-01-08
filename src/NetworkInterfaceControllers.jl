@@ -20,8 +20,7 @@ using .NameSelector
 get_hwloc_selector() = Base.get_extension(@__MODULE__, :HwlocSelector)
 
 include("hostlists.jl")
-# Defindes a Hostlists module which is aliased to either SlurmHostlists or
-# SimpleHostlists
+using .Hostlists
 
 
 function best_interface_hwloc_closest(
