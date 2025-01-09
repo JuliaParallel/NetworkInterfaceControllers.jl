@@ -73,6 +73,7 @@ function transaction(db::Database, ifd::InterfaceData)::InterfaceAssignment
             if lowest_count == host_entry[interface]
                 host_entry[interface] += 1
                 selected_interface = interface
+                break
             end
         end
     end
