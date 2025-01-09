@@ -31,7 +31,7 @@ struct Database
 end
 
 function transaction(db::Database, ifd::InterfaceData)::InterfaceAssignment
-    selected_interface::String
+    selected_interface::String = ""
     lock(db.lock) do
         # We'll be iterating over these interfaces only -- this way the ifd
         # interface list can be used to select valid interfaces
@@ -96,8 +96,11 @@ function random_free_port(ip::IPv4; start=1000, stop=61000, max_attempts=100)
     @error "Could not find a free port after $(max_attempts) attempts."
 end
 
-function start_listener(ip::IPAddr, port::UInt32)
+function start_server(ip::IPAddr, port::UInt32)
     server::Sockets.TCPServer = listen(ip, port)
+    db::Database = Database()
+
+    @debug "Broker service stated with clean DB on $(ip):$(Int(port))"
 
     while true
         conn = accept(server)
@@ -107,6 +110,8 @@ function start_listener(ip::IPAddr, port::UInt32)
                 txn_port::TxnPort = random_free_port(ip)
                 serialize(conn, txn_port)
                 @debug "Using port $(txn_port) for transaction"
+                start_transaction_server(ip, txn_port.port, db)
+                @debug "Transaction completed, db=$(db)"
             catch err
                 @error "Connection ended with error $(err)."
             end
@@ -114,11 +119,61 @@ function start_listener(ip::IPAddr, port::UInt32)
     end
 end
 
-function start_transaction(ip::IPAddr, port::UInt32)
-    conn = connect(ip, port)
-    txn_port::TxnPort = deserialize(conn)
-    txn_port
+function start_transaction_server(ip::IPAddr, port::UInt32, db::Database)
+    # Establish connection on ephermeral port
+    @debug "Starting transaction server on: $(ip):$(Int(port))"
+    server::Sockets.TCPServer = listen(ip, port)
+    conn_txn = accept(server)
+
+    # Get broker request
+    @debug "Received incoming connection"
+    ifd::InterfaceData = deserialize(conn_txn)
+    assignemnt::InterfaceAssignment = transaction(db, ifd)
+
+    # Return interface assignemnt
+    @debug "Returning $(assignemnt) from $(ifd)"
+    serialize(conn_txn, assignemnt)
+    close(conn_txn)
 end
 
+function query_broker(
+        ip::IPAddr, port::UInt32, interfaces::Vector{Interfaces.Interface};
+        max_try=100, timeout=1
+    )::InterfaceAssignment
+    # Get ephermeral port
+    @debug "Querying connection broker on $(ip):$(Int(port))"
+    conn_port = connect(ip, port)
+    txn_port::TxnPort = deserialize(conn_port)
+    close(conn_port)
+
+    # Query broker
+    @debug "Trying ephermeral port: $(txn_port.port)"
+    conn_txn = Nothing
+    for x=1:max_try
+        try
+            conn_txn = connect(ip, txn_port.port)
+            break
+        catch e
+            if (e isa Base.IOError) && (e.code == -61)
+                @debug "Server not ready, retyring"
+                sleep(timeout)
+            else
+                rethrow(e)
+            end
+        end
+    end
+    interface_data = InterfaceData(
+        gethostname(),
+        interfaces |> x->map(y->y.name, x)
+    )
+    @debug "Sending request: $(interface_data)"
+    serialize(conn_txn, interface_data)
+    # Get query result
+    ifa::InterfaceAssignment = deserialize(conn_txn)
+    close(conn_txn)
+
+    @debug "Received $(ifa)"
+    return ifa
+end
 
 end # module Broker
