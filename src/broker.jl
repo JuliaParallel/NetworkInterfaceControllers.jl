@@ -153,7 +153,6 @@ function query_broker(
     for x=1:max_try
         try
             conn_txn = connect(ip, txn_port.port)
-            break
         catch e
             if (e isa Base.IOError) && (e.code == -61)
                 @debug "Server not ready, retyring"
@@ -162,6 +161,7 @@ function query_broker(
                 rethrow(e)
             end
         end
+        break
     end
     interface_data = InterfaceData(
         gethostname(),
