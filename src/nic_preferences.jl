@@ -9,11 +9,15 @@ using Preferences
     MATCH_REGEX=4
 end
 
+export MATCH_EXACT, MATCH_PREFIX, MATCH_SUFFIX, MATCH_REGEX, MATCH_STRATEGY
+
 @enum USE_STRATEGY begin
     USE_ALWAYS=1
     USE_HOSTNAME=2
     USE_DISABLED=3
 end
+
+export USE_ALWAYS, USE_HOSTNAME, USE_DISABLED, USE_STRATEGY
 
 const allowed_mode_keys          = ("when", "hostlist")
 const allowed_iface_keys         = ("name", "match_strategy", "port")
@@ -78,7 +82,16 @@ function iface_dict(
     return ifd
 end
 
-export mode_dict, iface_dict
+setting(::Val{:mode}, args...; kwargs...) = mode_dict(args...; kwargs...)
+setting(::Val{:interface}, args...; kwargs...) = iface_dict(args...; kwargs...)
+setting(s::Symbol, args...; kwargs...) = setting(Val(s), args...; kwargs...)
+
+export setting
+
+
+macro val_or_default(s)
+    return :( isnothing(eval($s)) ? eval(Symbol($s, :_default)) : eval($s) )
+end
 
 mutable struct ModeSettings
     when::USE_STRATEGY
@@ -136,26 +149,31 @@ mutable struct InterfaceSettings
     end
 end
 
-const _d_class = "Ethernet"
 
-const _name_selector_mode = @load_preference("name_selector_mode", mode_dict(USE_ALWAYS))
-const _preferred_interface = @load_preference("preferred_interface", iface_dict(nothing, MATCH_EXACT))
+const _name_selector_mode_default = setting(:mode, USE_ALWAYS)
+const _preferred_interface_default = setting(:interface, ".*", MATCH_REGEX)
+const _name_selector_mode = @load_preference("name_selector_mode")
+const _preferred_interface = @load_preference("preferred_interface")
 
 const INTERFACE_NAME_BLACKLIST = @load_preference("interface_name_blacklist")
 const INTERFACE_NAME_WHITELIST = @load_preference("interface_name_whitelist")
 
-const _hwloc_selector_mode = @load_preference("hwloc_selector_mode", mode_dict(USE_DISABLED))
-const HWLOC_NIC_PCI_CLASS = @load_preference("hwloc_nic_pci_class", _d_class)
+const _hwloc_selector_mode_default = setting(:mode, USE_DISABLED)
+const _hwloc_nic_pci_class_default = "Ethernet"
+const _hwloc_selector_mode = @load_preference("hwloc_selector_mode")
+const HWLOC_NIC_PCI_CLASS = @load_preference("hwloc_nic_pci_class", _hwloc_nic_pci_class_default)
 
-const _broker_mode = @load_preference("broker_mode", mode_dict(USE_DISABLED))
-const _broker_interface = @load_preference("broker_interface", iface_dict(nothing, MATCH_EXACT, 1000))
+const _broker_mode_default = setting(:mode, USE_DISABLED)
+const _broker_interface_default = setting(:interface, ".*", MATCH_REGEX, 3000)
+const _broker_mode = @load_preference("broker_mode")
+const _broker_interface = @load_preference("broker_interface")
 
-const NAME_SELECTOR = ModeSettings(_name_selector_mode)
-const HWLOC_SELECTOR = ModeSettings(_hwloc_selector_mode)
-const BROKER = ModeSettings(_broker_mode)
+const NAME_SELECTOR = ModeSettings(@val_or_default(:_name_selector_mode))
+const HWLOC_SELECTOR = ModeSettings(@val_or_default(:_hwloc_selector_mode))
+const BROKER = ModeSettings(@val_or_default(:_broker_mode))
 
-const PREFERRED_INTERFACE = InterfaceSettings(_preferred_interface)
-const BROKER_INTERFACE = InterfaceSettings(_broker_interface)
+const PREFERRED_INTERFACE = InterfaceSettings(@val_or_default(:_preferred_interface))
+const BROKER_INTERFACE = InterfaceSettings(@val_or_default(:_broker_interface))
 
 export NAME_SELECTOR, HWLOC_SELECTOR, BROKER
 export INTERFACE_NAME_BLACKLIST, INTERFACE_NAME_WHITELIST
@@ -170,14 +188,14 @@ end
 return in_list
 
 function configure!(;
-        name_selector_mode=mode_dict(USE_ALWAYS),
-        preferred_interface=iface_dict(nothing, MATCH_EXACT),
+        name_selector_mode::Dict{String, Any}=_name_selector_mode_default,
+        preferred_interface::Dict{String, Any}=_preferred_interface_default,
         interface_name_whitelist::Union{Vector{String}, Nothing}=nothing,
         interface_name_blacklist::Union{Vector{String}, Nothing}=nothing,
-        hwloc_selector_mode=mode_dict(USE_DISABLED),
-        hwloc_nic_pci_class::Union{String, Nothing}=_d_class,
-        broker_mode=mode_dict(USE_DISABLED),
-        broker_interface=iface_dict(nothing, MATCH_EXACT, 1000)
+        hwloc_selector_mode::Dict{String, Any}=_hwloc_selector_mode_default,
+        hwloc_nic_pci_class::Union{String, Nothing}=_hwloc_nic_pci_class_default,
+        broker_mode::Dict{String, Any}=_broker_mode_default,
+        broker_interface::Dict{String, Any}=_broker_interface_default
     )
 
     @assert check_mode(name_selector_mode)
