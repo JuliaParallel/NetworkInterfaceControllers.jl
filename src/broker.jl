@@ -149,7 +149,7 @@ function query_broker(
 
     # Query broker
     @debug "Trying ephermeral port: $(txn_port.port)"
-    conn_txn = Nothing
+    conn_txn = nothing
     for x=1:max_try
         try
             conn_txn = connect(ip, txn_port.port)
@@ -161,8 +161,10 @@ function query_broker(
                 rethrow(e)
             end
         end
-        break
+        # Keep retrying `max_try` times, unless we've got a working connection
+        (! isnothing(conn_txn)) && break
     end
+
     interface_data = InterfaceData(
         gethostname(),
         interfaces |> x->map(y->y.name, x)
