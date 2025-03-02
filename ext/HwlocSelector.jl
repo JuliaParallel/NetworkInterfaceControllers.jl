@@ -108,7 +108,7 @@ get_nodes(tree_node, type) = filter(
 get_network_devices(root) = filter(
     x->Hwloc.hwloc_pci_class_string(
         nodevalue(x).attr.class_id
-    ) == NetworkInterfaceControllers.NICPreferences.hwloc_nic_pci_class,
+    ) == NetworkInterfaceControllers.NICPreferences.HWLOC_NIC_PCI_CLASS,
     get_nodes(root, :PCI_Device)
 )
 

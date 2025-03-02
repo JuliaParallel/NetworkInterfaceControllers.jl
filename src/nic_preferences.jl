@@ -161,7 +161,9 @@ const INTERFACE_NAME_WHITELIST = @load_preference("interface_name_whitelist")
 const _hwloc_selector_mode_default = setting(:mode, USE_DISABLED)
 const _hwloc_nic_pci_class_default = "Ethernet"
 const _hwloc_selector_mode = @load_preference("hwloc_selector_mode")
-const HWLOC_NIC_PCI_CLASS = @load_preference("hwloc_nic_pci_class", _hwloc_nic_pci_class_default)
+const HWLOC_NIC_PCI_CLASS = @load_preference(
+    "hwloc_nic_pci_class", _hwloc_nic_pci_class_default
+)
 
 const _broker_mode_default = setting(:mode, USE_DISABLED)
 const _broker_interface_default = setting(:interface, ".*", MATCH_REGEX, 3000)

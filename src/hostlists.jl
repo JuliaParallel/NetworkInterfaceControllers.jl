@@ -114,6 +114,8 @@ Base.show(io::IO, x::Hostlist) = print(io, string(x))
 
 end
 
+global Hostlist
+
 function __init__()
     if "" == SlurmHostlists.libslurm
         @debug "libslurm.so not found, using SimpleHostlists"
