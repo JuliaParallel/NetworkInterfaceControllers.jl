@@ -169,6 +169,7 @@ const _broker_mode_default = setting(:mode, USE_DISABLED)
 const _broker_interface_default = setting(:interface, ".*", MATCH_REGEX, 3000)
 const _broker_mode = @load_preference("broker_mode")
 const _broker_interface = @load_preference("broker_interface")
+const BORKER_HOST_ENV = @load_preference("broker_host_env")
 
 const NAME_SELECTOR = ModeSettings(@val_or_default(:_name_selector_mode))
 const HWLOC_SELECTOR = ModeSettings(@val_or_default(:_hwloc_selector_mode))
@@ -197,7 +198,8 @@ function configure!(;
         hwloc_selector_mode::Dict{String, Any}=_hwloc_selector_mode_default,
         hwloc_nic_pci_class::Union{String, Nothing}=_hwloc_nic_pci_class_default,
         broker_mode::Dict{String, Any}=_broker_mode_default,
-        broker_interface::Dict{String, Any}=_broker_interface_default
+        broker_interface::Dict{String, Any}=_broker_interface_default,
+        broker_host_env::Union{Vector{String}, Nothing}=nothing
     )
 
     @assert check_mode(name_selector_mode)
@@ -215,7 +217,8 @@ function configure!(;
         "hwloc_selector_mode" => hwloc_selector_mode,
         "hwloc_nic_pci_class" => hwloc_nic_pci_class,
         "broker_mode" => broker_mode,
-        "broker_interface" => broker_interface
+        "broker_interface" => broker_interface,
+        "broker_host_env" => broker_host_env
     )
 end
 
