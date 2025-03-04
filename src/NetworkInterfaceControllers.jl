@@ -84,6 +84,8 @@ function broker_startup_string(ipv::Int)::String
     return "$(runtime_str) -e '$(import_str); $(query_str) |> last |> wait'"
 end
 
+broker_startup_string() = broker_startup_string(4)
+
 function broker_query_string(ip::String, port::Int)::String
     runtime_str = julia_runtime_str()
     import_str  = "using NetworkInterfaceControllers.Broker, Sockets"
@@ -103,6 +105,19 @@ end
 function best_interface_broker(
         data::Interface; broker_port::Union{T, Nothing}=nothing
     ) where T <: Integer
+
+    if isnothing(broker_port)
+        @debug "Getting broker port from NICPreferences.BROKER_INTERFACE"
+        broker_port = NICPreferences.BROKER_INTERFACE.port
+        @assert !isnothing(broker_port)
+    end
+
+    # Default to `localhost` if a suitable environment variable containing the
+    # broker address is not set
+    broker_addr = "localhost"
+    for env_add in NICPreferences.BROKER_HOST_ENV
+    end
+
 end
 
 function best_interfaces(data::Vector{Interface})
