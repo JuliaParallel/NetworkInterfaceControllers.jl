@@ -8,13 +8,16 @@ export get_interface_data
 
 include("broker.jl")
 using .Broker
+export Broker
 export start_server, query
 
 include("nic_preferences.jl")
 using .NICPreferences
+export NICPreferences
 
 include("name_selector.jl")
 using .NameSelector
+export NameSelector
 
 # Load HwlocSelector module via and extension => avoid adding dependencies on
 # Hwloc and AbstractTrees unless needed
@@ -22,6 +25,7 @@ get_hwloc_selector() = Base.get_extension(@__MODULE__, :HwlocSelector)
 
 include("hostlists.jl")
 using .Hostlists
+export Hostlists
 
 #------------------------------------------------------------------------------
 # Helper functions for Broker
@@ -117,7 +121,6 @@ function best_interface_broker(
     broker_addr = "localhost"
     for env_add in NICPreferences.BROKER_HOST_ENV
     end
-
 end
 
 function best_interfaces(data::Vector{Interface})
