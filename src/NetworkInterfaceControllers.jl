@@ -1,5 +1,7 @@
 module NetworkInterfaceControllers
 
+using Sockets
+
 include("interfaces.jl")
 using .Interfaces
 export Interface, get_interface_data
@@ -42,20 +44,19 @@ function broker_ip_port(ipv)
             x->NameSelector.best_interfaces(
                 x,
                 NICPreferences.BROKER_INTERFACE.name,
-                NICPreferences.BROKER_INTERFACE.match_strategy) |>
-            only
+                NICPreferences.BROKER_INTERFACE.match_strategy
+            ) |> only
     return iface.ip, NICPreferences.BROKER_INTERFACE.port
 end
 
 function start_broker(ipv)
-    ip, port = broker_port(ipv)
+    ip, port = broker_ip_port(ipv)
 
-    t::Task = @task Broker.start_server(
-        iface.ip, UInt32(NICPreferences.BROKER_INTERFACE.port)
-    )
+    t::Task = @task Broker.start_server(ip, UInt32(port))
+
     # Run the server right away
     schedule(t)
-    return iface.ip, NICPreferences.BROKER_INTERFACE.port, t
+    return ip, port, t
 end
 
 function broker_ip_string(ipv::Int)::String
@@ -90,16 +91,16 @@ end
 
 broker_startup_string() = broker_startup_string(4)
 
-function broker_query_string(ip::String, port::Int)::String
-    runtime_str = julia_runtime_str()
-    import_str  = "using NetworkInterfaceControllers.Broker, Sockets"
-    query_str   = "Broker.query(ip\"$(ip)\", UInt32($(port)), ifaces)"
-
-    return "$(runtime_str) -e '$(import_str); $(query_str)'"
-end
+# function broker_query_string(ip::String, port::Int)::String
+#     runtime_str = julia_runtime_str()
+#     import_str  = "using NetworkInterfaceControllers.Broker, Sockets"
+#     query_str   = "Broker.query(ip\"$(ip)\", UInt32($(port)), ifaces)"
+# 
+#     return "$(runtime_str) -e '$(import_str); $(query_str)'"
+# end
 
 export start_broker, broker_ip_port, broker_ip_string, broker_port_string
-export broker_startup_string, broker_query_string
+export broker_startup_string#, broker_query_string
 
 function best_interface_hwloc_closest(
         data::Interface; pid::Union{T, Nothing}=nothing
@@ -107,8 +108,9 @@ function best_interface_hwloc_closest(
 end
 
 function best_interface_broker(
-        data::Interface; broker_port::Union{T, Nothing}=nothing
-    ) where T <: Integer
+        data::Vector{Interface}, ipv::Type{V};
+        broker_port::Union{T, Nothing}=nothing
+    ) where {T <: Integer, V <: IPAddr}
 
     if isnothing(broker_port)
         @debug "Getting broker port from NICPreferences.BROKER_INTERFACE"
@@ -118,9 +120,22 @@ function best_interface_broker(
 
     # Default to `localhost` if a suitable environment variable containing the
     # broker address is not set
-    broker_addr = "localhost"
-    for env_add in NICPreferences.BROKER_HOST_ENV
+    broker_addr        = "localhost"
+    broker_addr_source = "default"
+    for broker_addr_source in NICPreferences.BROKER_HOST_ENV
+        if broker_addr_source in keys(ENV)
+            @debug "`$(broker_addr_source)` find in environment => using as broker address"
+            broker_addr = ENV[broker_addr_source]
+            break # break on first occurrence
+        end
     end
+
+    # Interpret broker_addr as a hostlist
+    broker_addr = Hostlists.Hostlist(broker_addr) |> first
+    @debug "Using broker server address = `$(broker_addr)` (from `ENV[$(broker_addr_source)]`)"
+
+    ip, port = broker_ip_port(ipv)
+    return Broker.query_broker(ip, UInt32(port), data)
 end
 
 function best_interfaces(data::Vector{Interface})

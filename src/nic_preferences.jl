@@ -169,7 +169,7 @@ const _broker_mode_default      = setting(:mode, USE_DISABLED)
 const _broker_interface_default = setting(:interface, ".*", MATCH_REGEX, 3000)
 const _broker_mode      = @load_preference("broker_mode")
 const _broker_interface = @load_preference("broker_interface")
-const BORKER_HOST_ENV   = @load_preference("broker_host_env", [])
+const BROKER_HOST_ENV   = @load_preference("broker_host_env", [])
 
 const NAME_SELECTOR  = ModeSettings(@val_or_default(:_name_selector_mode))
 const HWLOC_SELECTOR = ModeSettings(@val_or_default(:_hwloc_selector_mode))
@@ -209,7 +209,6 @@ function configure!(;
     @assert check_interface(preferred_interface)
     @assert check_interface(broker_interface)
 
-    println(broker_host_env)
     @set_preferences!(
         "name_selector_mode"       => name_selector_mode,
         "preferred_interface"      => preferred_interface,

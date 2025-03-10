@@ -154,7 +154,7 @@ function query_broker(
         try
             conn_txn = connect(ip, txn_port.port)
         catch e
-            if (e isa Base.IOError) && (e.code == -61)
+            if (e isa Base.IOError) && (e.code in (-61, -111))
                 @debug "Server not ready, retyring"
                 sleep(timeout)
             else
