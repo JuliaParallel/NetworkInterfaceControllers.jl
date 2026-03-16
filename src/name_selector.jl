@@ -115,7 +115,7 @@ function best_interfaces(
         @warn "'preferred_interface_name' is empty! Matching to everything"
         name_regex = Regex(".*")
     else
-        name_regex = Regex(NICPreferences.PREFERRED_INTERFACE.name)
+        name_regex = Regex(name)
     end
 
     matched = Interfaces.Interface[]

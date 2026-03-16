@@ -1,11 +1,10 @@
 name = "NIC Test"
-uuid = "6f74fd91-2978-43ad-8164-3af8c0ec0142"
 authors = ["Johannes Blaschke <johannes@blaschke.science>"]
-version = "0.2.0"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 Hwloc = "0e44f5e4-bd66-52a0-8798-143a42290a1d"
+NetworkInterfaceControllers = "6f74fd91-2978-43ad-8164-3af8c0ec0142"
 Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [compat]

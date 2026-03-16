@@ -1,7 +1,7 @@
 name = "NetworkInterfaceControllers"
 uuid = "6f74fd91-2978-43ad-8164-3af8c0ec0142"
 authors = ["Johannes Blaschke <johannes@blaschke.science>"]
-version = "0.2.0"
+version = "1.0.0"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"

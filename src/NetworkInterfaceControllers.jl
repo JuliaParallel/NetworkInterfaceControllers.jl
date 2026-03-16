@@ -124,7 +124,10 @@ function best_interface_broker(
     broker_addr_source = "default"
     for broker_addr_source in NICPreferences.BROKER_HOST_ENV
         if broker_addr_source in keys(ENV)
-            @debug "`$(broker_addr_source)` find in environment => using as broker address"
+            @debug (
+                "`$(broker_addr_source)` find in environment => ",
+                "using as broker address"
+            )
             broker_addr = ENV[broker_addr_source]
             break # break on first occurrence
         end
@@ -132,7 +135,10 @@ function best_interface_broker(
 
     # Interpret broker_addr as a hostlist
     broker_addr = Hostlists.Hostlist(broker_addr) |> first
-    @debug "Using broker server address = `$(broker_addr)` (from `ENV[$(broker_addr_source)]`)"
+    @debug (
+        "Using broker server address = `$(broker_addr)` ",
+        "(from `ENV[$(broker_addr_source)]`)"
+    )
 
     ip, port = broker_ip_port(ipv)
     return Broker.query_broker(ip, UInt32(port), data)
@@ -146,7 +152,10 @@ function best_interfaces(data::Vector{Interface})
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_HWLOC_CLOSEST
         HwlocSelector = get_hwloc_selector()
         if isnothing(HwlocSelector)
-            @error "'Hwloc' and/or 'AbstractTrees' not loaded! Run: `import Hwloc, AbstractTrees`"
+            @error (
+                "'Hwloc' and/or 'AbstractTrees' not loaded! ",
+                "Run: `import Hwloc, AbstractTrees`"
+            )
         end
         return HwlocSelector.best_interfaces(data)
     elseif strategy == NICPreferences.PREFERRED_INTERFACE_BROKER

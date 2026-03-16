@@ -188,7 +188,7 @@ function in_list(elt::T, v::Union{Nothing, Vector{T}}, d::Bool)::Bool where T
     return (elt in v)
 end
 
-return in_list
+export in_list
 
 function configure!(;
         name_selector_mode::Dict{String, Any} = _name_selector_mode_default,

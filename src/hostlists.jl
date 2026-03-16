@@ -114,15 +114,15 @@ Base.show(io::IO, x::Hostlist) = print(io, string(x))
 
 end
 
-global Hostlist
+const HOSTLIST_TYPE = Ref{Type}()
 
 function __init__()
     if "" == SlurmHostlists.libslurm
         @debug "libslurm.so not found, using SimpleHostlists"
-        global const Hostlists.Hostlist = SimpleHostlists.Hostlist
+        HOSTLIST_TYPE[] = SimpleHostlists.Hostlist
     else
         @debug "libslurm.so found, using SlurmHostlists"
-        global const Hostlists.Hostlist = SlurmHostlists.Hostlist
+        HOSTLIST_TYPE[] = SlurmHostlists.Hostlist
     end
 end
 end

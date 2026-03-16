@@ -133,7 +133,10 @@ function hwloc_nic_distances(cpuid::Int)::Dict{String, Int}
             distances[name] = dist
             @debug "Interface $(name) is $(dist) steps from CPU $(cpuid)"
         else
-            @warn "Failed to find path connecting interface $(name) with CPU $(cpuid) on Hwloc tree"
+            @warn (
+                "Failed to find path connecting interface $(name) ",
+                "with CPU $(cpuid) on Hwloc tree"
+            )
         end
     end
 
