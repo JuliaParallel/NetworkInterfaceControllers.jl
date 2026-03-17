@@ -7,9 +7,9 @@ NICPreferences.configure!(
         "bridge0", "gif0", "stf0", "anpi0", "anpi1", "anpi2", "ap1", "awdl0",
         "llw0", "utun0", "utun1", "utun2", "utun3"
     ],
-    hwloc_selector_mode=setting(:mode, USE_ALWAYS),
-    hwloc_nic_pci_class="Network",
-    broker_mode=setting(:mode, USE_ALWAYS),
+    hwloc_selector_mode=setting(:mode, USE_HOSTNAME),
+    hwloc_nic_pci_class=nothing,
+    broker_mode=setting(:mode, USE_HOSTNAME),
     broker_interface=setting(:interface, "^en0\$", MATCH_REGEX, 3000),
     broker_host_env=["JULIA_NIC_HOST"]
 )
