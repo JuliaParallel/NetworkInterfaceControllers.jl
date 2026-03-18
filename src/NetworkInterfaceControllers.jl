@@ -31,6 +31,7 @@ export Hostlists
 
 #------------------------------------------------------------------------------
 # Helper functions for Broker
+# These funtions make it easy to set up broker/client pairs in external shells
 #------------------------------------------------------------------------------
 
 function julia_runtime_str()::String
@@ -132,12 +133,9 @@ end
 fish_config() = fish_config(4)
 
 export start_broker, broker_ip_port, broker_ip_string, broker_port_string
-export broker_startup_string, bash_config, fish_config#, broker_query_string
+export broker_startup_string, bash_config, fish_config
 
-function best_interface_hwloc_closest(
-        data::Interface; pid::Union{T, Nothing}=nothing
-    ) where T <: Integer
-end
+
 
 function best_interface_broker(
         data::Vector{Interface}, ipv::Type{V};
