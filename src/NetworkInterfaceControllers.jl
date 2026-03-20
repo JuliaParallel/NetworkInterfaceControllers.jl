@@ -316,7 +316,10 @@ fish_config() = fish_config(4)
 export start_broker, broker_ip_port, broker_ip_string, broker_port_string
 export broker_startup_string, bash_config, fish_config
 
-
+#------------------------------------------------------------------------------
+# Use broker (possibly hosted elsewhere) to query for the least subscribed
+# interface on this machine
+#------------------------------------------------------------------------------
 
 function best_interface_broker(
         data::Vector{Interface}, ipv::Type{V};
