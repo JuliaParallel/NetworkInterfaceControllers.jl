@@ -28,7 +28,7 @@ check_mode(mode) = issubset(Set(keys(mode)), Set(allowed_mode_keys))
 check_interface(iface) = issubset(Set(keys(iface)), Set(allowed_iface_keys))
 
 function mode_dict(
-        when::USE_STRATEGY, hostname::Union{String, Nothing}=nothing
+        when::USE_STRATEGY, hostlist::Union{String, Nothing}=nothing
     )::Dict{String, Any}
 
     md = Dict{String, Any}()
@@ -43,7 +43,7 @@ function mode_dict(
         @error "$(when) is unhandled"
     end
 
-    !isnothing(hostname) && (md["hostname"] = hostname)
+    !isnothing(hostlist) && (md["hostlist"] = hostlist)
 
     if !check_mode(md)
         @error "$(md) is not a valid mode dict"

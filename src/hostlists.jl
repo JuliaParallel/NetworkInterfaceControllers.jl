@@ -59,7 +59,9 @@ function Base.convert(::Type{String}, hl::Hostlist, init_maxlen=8192)
     write_len = 0
     while true
         hostnames = Vector{UInt8}(undef, maxlen)
-        write_len = slurm_hostlist_ranged_string(hl.hlist, UInt64(sizeof(hostnames)), hostnames)
+        write_len = slurm_hostlist_ranged_string(
+            hl.hlist, UInt64(sizeof(hostnames)), hostnames
+        )
         (write_len != -1) && break
         maxlen *= 2
     end
