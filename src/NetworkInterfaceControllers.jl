@@ -321,6 +321,24 @@ export broker_startup_string, bash_config, fish_config
 # interface on this machine
 #------------------------------------------------------------------------------
 
+"""
+    best_interface_broker(data::Vector{Interface}, ipv::Type{V}; broker_port=nothing) where {T <: Integer, V <: IPAddr}
+
+Query the broker server to select the best network interface from `data`. If
+`broker_port` is `nothing`, the port is read from
+`NICPreferences.BROKER_INTERFACE`. The broker address is resolved by checking
+the environment variables listed in `NICPreferences.BROKER_HOST_ENV` in order,
+falling back to `"localhost"` if none are set. The address string is
+interpreted as a hostlist (via [`Hostlists`](@ref)) and the first entry is
+used.
+
+Returns the interface(s) recommended by the broker.
+
+# Arguments
+- `data::Vector{Interface}`: the candidate interfaces to choose from.
+- `ipv::Type{V}`: the IP address family (`IPv4` or `IPv6`).
+- `broker_port`: optional port override; defaults to the preference value.
+"""
 function best_interface_broker(
         data::Vector{Interface}, ipv::Type{V};
         broker_port::Union{T, Nothing}=nothing
