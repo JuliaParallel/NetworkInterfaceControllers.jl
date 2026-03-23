@@ -17,5 +17,5 @@ NICPreferences.configure!(
         "login[01-40],nid[200000-200255,004072-007200]"
     ),
     broker_interface=setting(:interface, "hsnb0:chn", MATCH_EXACT, 3000),
-    broker_host_env=["JULIA_NIC_HOST"]
+    broker_host_env=["JULIA_NIC_HOST","SLURM_JOB_NODELIST"]
 )
